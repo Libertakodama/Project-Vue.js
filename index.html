@@ -27,8 +27,8 @@
       <h2 class="note-title">{{ today.day }}<br>{{ today.date }}</h2>
       <form @keydown.enter.prevent="" class="note-form">
         <textarea class="textarea-note" v-bind:class="{ active: new_note }" placeholder="Your note here" v-model="new_note" v-on:keyup.enter="addItem"></textarea>
-        <div v-if = "editingId < 0" class="btn btn-add" v-bind:class="{ active: new_note }"  @click="addItem">+</div>
-        <div v-if = "editingId >= 0" class="btn btn-add" v-bind:class="{ active: new_note }"  @click="addItem">🖉</div>
+        <div v-if = "editingId == -1" class="btn btn-add" v-bind:class="{ active: new_note }"  @click="addItem">+</div>
+        <div v-if = "editingId != -1" class="btn btn-add" v-bind:class="{ active: new_note }"  @click="addItem">🖉</div>
       </form>
 
       <div v-if="pending.length > 0">
@@ -142,40 +142,46 @@
           this.noteList = JSON.parse(localStorage.getItem('note_list'));
         }
       },
-      // add a new item
-      addItem() {      
-        if (this.editingId >= 0) {
-          this.noteList[this.editingId].title = this.new_note;
-          console.log(this.noteList);
-          console.log("this.new_note : " + this.new_note);
-          console.log("this.noteList[" + this.editingId + "].title : " + this.noteList[this.editingId].title);          
+      // add a new item or edit it
+      addItem() {  
+        // edit an item    
+        if (this.editingId != -1) {
+          for(var i = 0; i < this.noteList.length; i++) {
+            if (this.noteList[i].id == this.editingId) {
+              this.noteList[i].title = this.new_note;
+              console.log("Edited Title : " + this.noteList[i].title);
+              break;
+            }
+        };          
         } else {
-        // validation check
+        // create a new item
           if (this.new_note) {
-            console.log("notelist length" + this.noteList.length);
             this.noteList.unshift({
-              id: this.noteList.length,
+              id: this.randomId(),
               title: this.new_note,
               done: false,
             });
           }
         }
-        // reset new_note
+        // reset new_note & editingId
         this.new_note = '';
         this.editingId = -1;
-        // save the new item in localstorage
 
-        localStorage.setItem('note_list', JSON.stringify(this.noteList));
+        // save the new item in localstorage
         return true;
       
       },
+      //Create a random Id
+      randomId() {
+        return Math.random().toString(36).substr(2, 9);
+      },
+      //Edit an item (set id)
       editItem(item) {
   
         this.new_note = item.title;
         console.log("Item title :" + item.title);
   
         for(var i = 0; i < this.noteList.length; i++) {
-          console.log("notelist title :" + this.noteList[i].title);
             if (this.noteList[i].title == item.title) {
               this.editingId = this.noteList[i].id;
               console.log("editingId :" + this.editingId);
