@@ -28,9 +28,7 @@
       <form @keydown.enter.prevent="" class="note-form">
         <textarea class="textarea-note" v-bind:class="{ active: new_note }" placeholder="Your note here" v-model="new_note" v-on:keyup.enter="addItem"></textarea>
         <div v-if = "editingId < 0" class="btn btn-add" v-bind:class="{ active: new_note }"  @click="addItem">+</div>
-        <div v-if = "editingId >= 0" class="btn btn-add" v-bind:class="{ active: new_note }"  @click="addItem">
-          <img src="images/edit.svg"/>
-        </div>
+        <div v-if = "editingId >= 0" class="btn btn-add" v-bind:class="{ active: new_note }"  @click="addItem">🖉</div>
       </form>
 
       <div v-if="pending.length > 0">
@@ -75,124 +73,128 @@
 
 
 <script>
-new Vue({
-  el: '#app',
-  data() {
-    return {
-      noteList: [
-        {"id":0,"title":"Go to codepen and get inspired","done":false},
-        {"id":1,"title":"Pick a project","done":false},
-        {"id":4,"title":"Create a new pen","done":true}
-      ],
-      new_note: '', 
-      editingId: -1,
-      showComplete: false,
-    };
-  },
-  mounted() {
-    this.getNotes();
-  },
-  watch: {
-    noteList: {
-      handler: function(updatedList) {
-        localStorage.setItem('note_list', JSON.stringify(updatedList));
-      },
-      deep: true
-    }
-  },
-  computed:{
-    pending: function() {
-      return this.noteList.filter(function(item) {
-        return !item.done;
-      })
-    },
-    completed: function() {
-      return this.noteList.filter(function(item) {
-        return item.done;
-      }); 
-    },
-    completedPercentage: function() {
-      return (Math.floor((this.completed.length / this.noteList.length) * 100)) + "%";
-    },
-    today: function() {
-      var weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-      var today = new Date();
-      var dd = today.getDate();
-      var mm = today.getMonth()+1; //January is 0!
-      var yyyy = today.getFullYear();
-
-      if(dd<10) {
-          dd = '0'+dd
-      } 
-
-      if(mm<10) {
-          mm = '0'+mm
-      } 
-
-      today = {
-        day: weekday[today.getDay()],
-        date:  mm + '-' + dd + '-' + yyyy,
-      }
-
-      return(today);
-    }
-  },
-  methods: {
-    // get all notes when loading the page
-    getNotes() {
-      if (localStorage.getItem('note_list')) {
-        this.noteList = JSON.parse(localStorage.getItem('note_list'));
-      }
-    },
-    // add a new item
-    addItem() {      
-      if (this.editingId >= 0) {
-        this.noteList[this.editingId].title = this.new_note;
-        console.log("this.new_note : " + this.new_note)        
-      } else {
-      // validation check
-        if (this.new_note) {
-          console.log("notelist length" + this.noteList.length);
-          this.noteList.unshift({
-            id: this.noteList.length,
-            title: this.new_note,
-            done: false,
-          });
-        }
-      }
-      // reset new_note
-      this.new_note = '';
-      this.editingId = -1;
-      // save the new item in localstorage
-      return true;
-    
-    },
-    editItem(item) {
-
-      this.new_note = item.title;
-      console.log("Item title :" + item.title);
-
-      for(var i = 0; i < this.noteList.length; i++) {
-        console.log("notelist title :" + this.noteList[i].title);
-          if (this.noteList[i].title == item.title) {
-            this.editingId = this.noteList[i].id;
-            console.log("this.noteList[i].id :" + this.noteList[i].id);
-            console.log("editingId :" + this.editingId);
-            break;
-          }
+  new Vue({
+    el: '#app',
+    data() {
+      return {
+        noteList: [
+          {"id":0,"title":"Go to codepen and get inspired","done":false},
+          {"id":1,"title":"Pick a project","done":false},
+          {"id":4,"title":"Create a new pen","done":true}
+        ],
+        new_note: '', 
+        editingId: -1,
+        showComplete: false,
       };
-      console.log(item);
-    
     },
-    deleteItem(item) {
-      this.noteList.splice(this.noteList.indexOf(item), 1);
+    mounted() {
+      this.getNotes();
     },
-    toggleShowComplete() {
-      this.showComplete = !this.showComplete;
+    watch: {
+      noteList: {
+        handler: function(updatedList) {
+          localStorage.setItem('note_list', JSON.stringify(updatedList));
+        },
+        deep: true
+      }
     },
-    clearAll() {
-      this.noteList = [];
-    }
-  },
-});
-</script>
+    computed:{
+      pending: function() {
+        return this.noteList.filter(function(item) {
+          return !item.done;
+        })
+      },
+      completed: function() {
+        return this.noteList.filter(function(item) {
+          return item.done;
+        }); 
+      },
+      completedPercentage: function() {
+        return (Math.floor((this.completed.length / this.noteList.length) * 100)) + "%";
+      },
+      today: function() {
+        var weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth()+1; //January is 0!
+        var yyyy = today.getFullYear();
+  
+        if(dd<10) {
+            dd = '0'+dd
+        } 
+  
+        if(mm<10) {
+            mm = '0'+mm
+        } 
+  
+        today = {
+          day: weekday[today.getDay()],
+          date:  mm + '-' + dd + '-' + yyyy,
+        }
+  
+        return(today);
+      }
+    },
+    methods: {
+      // get all notes when loading the page
+      getNotes() {
+        if (localStorage.getItem('note_list')) {
+          this.noteList = JSON.parse(localStorage.getItem('note_list'));
+        }
+      },
+      // add a new item
+      addItem() {      
+        if (this.editingId >= 0) {
+          this.noteList[this.editingId].title = this.new_note;
+          console.log(this.noteList);
+          console.log("this.new_note : " + this.new_note);
+          console.log("this.noteList[" + this.editingId + "].title : " + this.noteList[this.editingId].title);          
+        } else {
+        // validation check
+          if (this.new_note) {
+            console.log("notelist length" + this.noteList.length);
+            this.noteList.unshift({
+              id: this.noteList.length,
+              title: this.new_note,
+              done: false,
+            });
+          }
+        }
+        // reset new_note
+        this.new_note = '';
+        this.editingId = -1;
+        // save the new item in localstorage
+
+        localStorage.setItem('note_list', JSON.stringify(this.noteList));
+        return true;
+      
+      },
+      editItem(item) {
+  
+        this.new_note = item.title;
+        console.log("Item title :" + item.title);
+  
+        for(var i = 0; i < this.noteList.length; i++) {
+          console.log("notelist title :" + this.noteList[i].title);
+            if (this.noteList[i].title == item.title) {
+              this.editingId = this.noteList[i].id;
+              console.log("editingId :" + this.editingId);
+              break;
+            }
+        };
+        console.log(item);
+      
+      },
+      deleteItem(item) {
+        this.noteList.splice(this.noteList.indexOf(item), 1);
+      },
+      toggleShowComplete() {
+        this.showComplete = !this.showComplete;
+      },
+      clearAll() {
+        this.noteList = [];
+      }
+    },
+  });
+  </script>
+  

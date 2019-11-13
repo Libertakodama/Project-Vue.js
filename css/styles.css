@@ -211,8 +211,8 @@ ul.note-list li .edit{
   cursor: pointer;
   opacity: 0;
   width: 0;
-  background-color: #d17f20;
-  color: #fff;
+  background-color: #fff;
+  color: #fc6c48;
   transition: all ease-in 0.25s;
 }
 
