@@ -184,6 +184,9 @@ new Vue({
       console.log(item);
     
     },
+    deleteItem(item) {
+      this.noteList.splice(this.noteList.indexOf(item), 1);
+    },
     toggleShowComplete() {
       this.showComplete = !this.showComplete;
     },
