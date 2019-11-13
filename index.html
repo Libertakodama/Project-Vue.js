@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Note list - Vue.js</title>    
+  <meta name="viewport" content="width=device-width" />
+  <link rel="icon" href="images/favicon.png" sizes="32x32">
+  <link rel="stylesheet" type="text/css" href="css/styles.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,100,700,100italic,300italic,400italic">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-39432248-2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-39432248-2');
+  </script>
+
+</head>
+
+<body>
+  <div id="app">
+    <h1>Daily Note list manager</h1>
+    <section class="note-wrapper">
+      <h2 class="note-title">{{ today.day }}<br>{{ today.date }}</h2>
+      <form @keydown.enter.prevent="" class="note-form">
+        <textarea class="textarea-note" v-bind:class="{ active: new_note }" placeholder="Your note here" v-model="new_note" v-on:keyup.enter="addItem"></textarea>
+        <div v-if = "editingId < 0" class="btn btn-add" v-bind:class="{ active: new_note }"  @click="addItem">+</div>
+        <div v-if = "editingId >= 0" class="btn btn-add" v-bind:class="{ active: new_note }"  @click="addItem">
+          <img src="images/edit.svg"/>
+        </div>
+      </form>
+
+      <div v-if="pending.length > 0">
+        <p class="status busy">You have {{ pending.length }} pending item<span v-if="pending.length>1">s</span></p>
+        <transition-group name="note-item" tag="ul" class="note-list">
+          <li v-for="(item, index) in pending" v-bind:key="item.title">
+            <input class="note-checkbox" v-bind:id="'item_' + item.id" v-model="item.done" type="checkbox">
+            <label v-bind:for="'item_' + item.id"></label>
+            <span class="note-text">{{ item.title }}</span>
+            <span class="delete" @click="deleteItem(item)"></span>
+            <span class="edit" @click="editItem(item)"></span>
+          </li>
+        </transition>  
+      </div> 
+
+      <transition name="slide-fade">
+        <p class="status free" v-if="!pending.length" >Time to chill!  You have no notes.</p> 
+      </transition> 
+
+      <div v-if="completed.length > 0 && showComplete">
+        <p class="status">Completed notes: {{ completedPercentage }}</p>
+        <transition-group name="note-item" tag="ul" class="note-list archived">
+          <li v-for="(item, index) in completed" v-bind:key="item.title">
+            <input class="note-checkbox" v-bind:id="'item_' + item.id" v-model="item.done" type="checkbox">
+            <label v-bind:for="'item_' + item.id"></label>
+            <span class="note-text">{{ item.title }}</span>
+            <span class="delete" @click="deleteItem(item)"></span>
+            <span class="edit" @click="editItem(item)"></span>
+          </li>
+        </transition>  
+      </div>
+      <div class="control-buttons">
+        <div class="btn btn-secondary" v-if="completed.length > 0" @click="toggleShowComplete"><span v-if="!showComplete">Show</span><span v-else>Hide</span> Complete</div>
+        <div class="btn btn-secondary" v-if="noteList.length > 0" @click="clearAll">Clear All</div>
+      </div>
+    </section>
+  </div>
+  <footer> 
+    Made by Mathilde<br>
+  </footer>
+</body>
+
+
+<script>
+new Vue({
+  el: '#app',
+  data() {
+    return {
+      noteList: [
+        {"id":0,"title":"Go to codepen and get inspired","done":false},
+        {"id":1,"title":"Pick a project","done":false},
+        {"id":4,"title":"Create a new pen","done":true}
+      ],
+      new_note: '', 
+      editingId: -1,
+      showComplete: false,
+    };
+  },
+  mounted() {
+    this.getNotes();
+  },
+  watch: {
+    noteList: {
+      handler: function(updatedList) {
+        localStorage.setItem('note_list', JSON.stringify(updatedList));
+      },
+      deep: true
+    }
+  },
+  computed:{
+    pending: function() {
+      return this.noteList.filter(function(item) {
+        return !item.done;
+      })
+    },
+    completed: function() {
+      return this.noteList.filter(function(item) {
+        return item.done;
+      }); 
+    },
+    completedPercentage: function() {
+      return (Math.floor((this.completed.length / this.noteList.length) * 100)) + "%";
+    },
+    today: function() {
+      var weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      var today = new Date();
+      var dd = today.getDate();
+      var mm = today.getMonth()+1; //January is 0!
+      var yyyy = today.getFullYear();
+
+      if(dd<10) {
+          dd = '0'+dd
+      } 
+
+      if(mm<10) {
+          mm = '0'+mm
+      } 
+
+      today = {
+        day: weekday[today.getDay()],
+        date:  mm + '-' + dd + '-' + yyyy,
+      }
+
+      return(today);
+    }
+  },
+  methods: {
+    // get all notes when loading the page
+    getNotes() {
+      if (localStorage.getItem('note_list')) {
+        this.noteList = JSON.parse(localStorage.getItem('note_list'));
+      }
+    },
+    // add a new item
+    addItem() {      
+      if (this.editingId >= 0) {
+        this.noteList[this.editingId].title = this.new_note;
+        console.log("this.new_note : " + this.new_note)        
+      } else {
+      // validation check
+        if (this.new_note) {
+          console.log("notelist length" + this.noteList.length);
+          this.noteList.unshift({
+            id: this.noteList.length,
+            title: this.new_note,
+            done: false,
+          });
+        }
+      }
+      // reset new_note
+      this.new_note = '';
+      this.editingId = -1;
+      // save the new item in localstorage
+      return true;
+    
+    },
+    editItem(item) {
+
+      this.new_note = item.title;
+      console.log("Item title :" + item.title);
+
+      for(var i = 0; i < this.noteList.length; i++) {
+        console.log("notelist title :" + this.noteList[i].title);
+          if (this.noteList[i].title == item.title) {
+            this.editingId = this.noteList[i].id;
+            console.log("this.noteList[i].id :" + this.noteList[i].id);
+            console.log("editingId :" + this.editingId);
+            break;
+          }
+      };
+      console.log(item);
+    
+    },
+    toggleShowComplete() {
+      this.showComplete = !this.showComplete;
+    },
+    clearAll() {
+      this.noteList = [];
+    }
+  },
+});
+</script>
