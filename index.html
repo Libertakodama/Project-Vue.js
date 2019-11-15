@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <title>Note list - Vue.js</title>    
+  <title>Note list - Vue.js</title>
   <meta name="viewport" content="width=device-width" />
   <link rel="icon" href="images/favicon.png" sizes="32x32">
   <link rel="stylesheet" type="text/css" href="css/styles.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,100,700,100italic,300italic,400italic">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,100,700,100italic,300italic,400italic">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
 
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-39432248-2"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
 
     gtag('config', 'UA-39432248-2');
@@ -26,9 +28,10 @@
     <section class="note-wrapper">
       <h2 class="note-title">{{ today.day }}<br>{{ today.date }}</h2>
       <form @keydown.enter.prevent="" class="note-form">
-        <textarea class="textarea-note" v-bind:class="{ active: new_note }" placeholder="Your note here" v-model="new_note" v-on:keyup.enter="addItem"></textarea>
-        <div v-if = "editingId == -1" class="btn btn-add" v-bind:class="{ active: new_note }"  @click="addItem">+</div>
-        <div v-if = "editingId != -1" class="btn btn-add" v-bind:class="{ active: new_note }"  @click="addItem">🖉</div>
+        <textarea class="textarea-note" v-bind:class="{ active: new_note }" placeholder="Your note here"
+          v-model="new_note" v-on:keyup.enter="addItem"></textarea>
+        <div v-if="editingId == -1" class="btn btn-add" v-bind:class="{ active: new_note }" @click="addItem">+</div>
+        <div v-if="editingId != -1" class="btn btn-add" v-bind:class="{ active: new_note }" @click="addItem">🖉</div>
       </form>
 
       <div v-if="pending.length > 0">
@@ -41,12 +44,12 @@
             <span class="delete" @click="deleteItem(item)"></span>
             <span class="edit" @click="editItem(item)"></span>
           </li>
-        </transition>  
-      </div> 
+          </transition>
+      </div>
 
       <transition name="slide-fade">
-        <p class="status free" v-if="!pending.length" >Time to chill!  You have no notes.</p> 
-      </transition> 
+        <p class="status free" v-if="!pending.length">Time to chill! You have no notes.</p>
+      </transition>
 
       <div v-if="completed.length > 0 && showComplete">
         <p class="status">Completed notes: {{ completedPercentage }}</p>
@@ -58,149 +61,163 @@
             <span class="delete" @click="deleteItem(item)"></span>
             <span class="edit" @click="editItem(item)"></span>
           </li>
-        </transition>  
+          </transition>
       </div>
+
       <div class="control-buttons">
-        <div class="btn btn-secondary" v-if="completed.length > 0" @click="toggleShowComplete"><span v-if="!showComplete">Show</span><span v-else>Hide</span> Complete</div>
+        <div class="btn btn-secondary" v-if="completed.length > 0" @click="toggleShowComplete"><span
+            v-if="!showComplete">Show</span><span v-else>Hide</span> Complete</div>
         <div class="btn btn-secondary" v-if="noteList.length > 0" @click="clearAll">Clear All</div>
       </div>
     </section>
+
+    <footer>
+      <Hello />
+    </footer>
   </div>
-  <footer> 
-    Made by Mathilde<br>
-  </footer>
-</body>
 
-
-<script>
-  new Vue({
-    el: '#app',
-    data() {
-      return {
-        noteList: [
-          {"id":0,"title":"Go to codepen and get inspired","done":false},
-          {"id":1,"title":"Pick a project","done":false},
-          {"id":4,"title":"Create a new pen","done":true}
-        ],
-        new_note: '', 
-        editingId: -1,
-        showComplete: false,
-      };
-    },
-    mounted() {
-      this.getNotes();
-    },
-    watch: {
-      noteList: {
-        handler: function(updatedList) {
-          localStorage.setItem('note_list', JSON.stringify(updatedList));
+  <script>
+    let Hello = {
+            template: `<p class="hello">{{ message }}</p>`,
+            data: function () {
+                return {
+                    message: 'Made by Mathilde!'
+                }
+            },
+        }
+    new Vue({
+      el: '#app',
+      components: {
+                'hello': Hello
+            },
+      data() {
+        return {
+          noteList: [
+            { "id": 0, "title": "Go to codepen and get inspired", "done": false },
+            { "id": 1, "title": "Pick a project", "done": false },
+            { "id": 4, "title": "Create a new pen", "done": true }
+          ],
+          new_note: '',
+          editingId: -1,
+          showComplete: false,
+        };
+      },
+      mounted() {
+        this.getNotes();
+      },
+      watch: {
+        noteList: {
+          handler: function (updatedList) {
+            localStorage.setItem('note_list', JSON.stringify(updatedList));
+          },
+          deep: true
+        }
+      },
+      computed: {
+        pending: function () {
+          return this.noteList.filter(function (item) {
+            return !item.done;
+          })
         },
-        deep: true
-      }
-    },
-    computed:{
-      pending: function() {
-        return this.noteList.filter(function(item) {
-          return !item.done;
-        })
-      },
-      completed: function() {
-        return this.noteList.filter(function(item) {
-          return item.done;
-        }); 
-      },
-      completedPercentage: function() {
-        return (Math.floor((this.completed.length / this.noteList.length) * 100)) + "%";
-      },
-      today: function() {
-        var weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-        var today = new Date();
-        var dd = today.getDate();
-        var mm = today.getMonth()+1; //January is 0!
-        var yyyy = today.getFullYear();
-  
-        if(dd<10) {
-            dd = '0'+dd
-        } 
-  
-        if(mm<10) {
-            mm = '0'+mm
-        } 
-  
-        today = {
-          day: weekday[today.getDay()],
-          date:  mm + '-' + dd + '-' + yyyy,
-        }
-  
-        return(today);
-      }
-    },
-    methods: {
-      // get all notes when loading the page
-      getNotes() {
-        if (localStorage.getItem('note_list')) {
-          this.noteList = JSON.parse(localStorage.getItem('note_list'));
-        }
-      },
-      // add a new item or edit it
-      addItem() {  
-        // edit an item    
-        if (this.editingId != -1) {
-          for(var i = 0; i < this.noteList.length; i++) {
-            if (this.noteList[i].id == this.editingId) {
-              this.noteList[i].title = this.new_note;
-              console.log("Edited Title : " + this.noteList[i].title);
-              break;
-            }
-        };          
-        } else {
-        // create a new item
-          if (this.new_note) {
-            this.noteList.unshift({
-              id: this.randomId(),
-              title: this.new_note,
-              done: false,
-            });
-          }
-        }
-        // reset new_note & editingId
-        this.new_note = '';
-        this.editingId = -1;
+        completed: function () {
+          return this.noteList.filter(function (item) {
+            return item.done;
+          });
+        },
+        completedPercentage: function () {
+          return (Math.floor((this.completed.length / this.noteList.length) * 100)) + "%";
+        },
+        today: function () {
+          var weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+          var today = new Date();
+          var dd = today.getDate();
+          var mm = today.getMonth() + 1; //January is 0!
+          var yyyy = today.getFullYear();
 
-        // save the new item in localstorage
-        return true;
-      
+          if (dd < 10) {
+            dd = '0' + dd
+          }
+
+          if (mm < 10) {
+            mm = '0' + mm
+          }
+
+          today = {
+            day: weekday[today.getDay()],
+            date: mm + '-' + dd + '-' + yyyy,
+          }
+
+          return (today);
+        }
       },
-      //Create a random Id
-      randomId() {
-        return Math.random().toString(36).substr(2, 9);
-      },
-      //Edit an item (set id)
-      editItem(item) {
-  
-        this.new_note = item.title;
-        console.log("Item title :" + item.title);
-  
-        for(var i = 0; i < this.noteList.length; i++) {
+      methods: {
+        // get all notes when loading the page
+        getNotes() {
+          if (localStorage.getItem('note_list')) {
+            this.noteList = JSON.parse(localStorage.getItem('note_list'));
+          }
+        },
+        // add a new item or edit it
+        addItem() {
+          // edit an item    
+          if (this.editingId != -1) {
+            for (var i = 0; i < this.noteList.length; i++) {
+              if (this.noteList[i].id == this.editingId) {
+                this.noteList[i].title = this.new_note;
+                console.log("Edited Title : " + this.noteList[i].title);
+                break;
+              }
+            };
+          } else {
+            // create a new item
+            if (this.new_note) {
+              this.noteList.unshift({
+                id: this.randomId(),
+                title: this.new_note,
+                done: false,
+              });
+            }
+          }
+          // reset new_note & editingId
+          this.new_note = '';
+          this.editingId = -1;
+
+          // save the new item in localstorage
+          return true;
+
+        },
+        //Create a random Id
+        randomId() {
+          return Math.random().toString(36).substr(2, 9);
+        },
+        //Edit an item (set id)
+        editItem(item) {
+
+          this.new_note = item.title;
+          console.log("Item title :" + item.title);
+
+          for (var i = 0; i < this.noteList.length; i++) {
             if (this.noteList[i].title == item.title) {
               this.editingId = this.noteList[i].id;
               console.log("editingId :" + this.editingId);
               break;
             }
-        };
-        console.log(item);
-      
+          };
+          console.log(item);
+
+        },
+        deleteItem(item) {
+          this.noteList.splice(this.noteList.indexOf(item), 1);
+        },
+        toggleShowComplete() {
+          this.showComplete = !this.showComplete;
+        },
+        clearAll() {
+          this.noteList = [];
+        }
       },
-      deleteItem(item) {
-        this.noteList.splice(this.noteList.indexOf(item), 1);
-      },
-      toggleShowComplete() {
-        this.showComplete = !this.showComplete;
-      },
-      clearAll() {
-        this.noteList = [];
-      }
-    },
-  });
+    });
   </script>
-  
+</body>
+
+</html>
